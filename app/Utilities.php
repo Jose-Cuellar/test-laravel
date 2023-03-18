@@ -60,16 +60,12 @@ class Utilities
     const COD_STATUS_PENDING_SEND = 9;
     const COD_STATUS_DELETE = 10;
 
-    // Envio de emails de solicitud soat
-    const EMAIL_NOT_SOAT_1 = 'ivan.plazas@brm.com.co';
-    const EMAIL_NOT_SOAT_2 = 'andres.zavala@brm.com.co';
-    const EMAIL_NOT_SOAT_3 = 'mesa9@brm.com.co';
+    // Emails de administradores
+    const EMAIL_ADMIN = "jucuellar4@gmail.com";
 
     //Roles
-    const COD_ROLES_USER = 5;
-    const COD_ROLES_LUB = 4;
-    const COD_ROLES_DISTRIBUTOR = 7;
-    const COD_ROLES_COME = 6;
+    const COD_ROLE_ADMIN = 1;
+    const COD_ROLE_USER = 2;
 
     // Register origin
     const COD_REGISTER_ORIGIN_ORIGINAL = 1;

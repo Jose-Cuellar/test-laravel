@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Routing\Controller as BaseController;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends BaseController
 {
@@ -40,26 +41,46 @@ class UserController extends BaseController
             Log::info('Validacion request completada con exito');
 
             // Se valida si el usuario no existe
+            $allUsers = null;
             $allUsers = User::where('email', '=', $request->email)->first();
             Log::info('allUsers ' . $allUsers);
 
             // Se realiza el registro del usuario si aun no esta registrado
-            if($allUsers == ''){
-                Log::info('Se va a registrar el usuario');
-                $newUser = new User;
-                $newUser->name = $request->name;
-                $newUser->last_name = $request->last_name;
-                $newUser->email = $request->email;
-                $newUser->password = bcrypt($request->input('password'));
-                $newUser->save();
-            } 
+            if($allUsers == null){
+                if($request->email == Utilities::EMAIL_ADMIN){
+                    Log::info('Se va a registrar el usuario administrador');
+                    $newUserAdmin = new User;
+                    $newUserAdmin->name = $request->name;
+                    $newUserAdmin->last_name = $request->last_name;
+                    $newUserAdmin->email = $request->email;
+                    $newUserAdmin->password = bcrypt($request->input('password'));
+                    $newUserAdmin->role_id = Utilities::COD_ROLE_ADMIN;
+                    $newUserAdmin->save();
+
+                    return Utilities::sendMessage(
+                        Utilities::COD_RESPONSE_SUCCESS,
+                        'Usuario administrador registrado correctamente',
+                        false,
+                        Utilities::COD_RESPONSE_HTTP_CREATED,
+                        null
+                    );
+                }else{
+                    Log::info('Se va a registrar el usuario');
+                    $newUser = new User;
+                    $newUser->name = $request->name;
+                    $newUser->last_name = $request->last_name;
+                    $newUser->email = $request->email;
+                    $newUser->password = bcrypt($request->input('password'));
+                    $newUser->role_id = Utilities::COD_ROLE_USER;
+                    $newUser->save();
+                }
+            }
             else {
-                return Utilities::sendMessage(
-                    Utilities::COD_RESPONSE_ERROR_CREATE,
-                    'El email ingresado ya se encuentra registrado',
-                    true,
-                    Utilities::COD_RESPONSE_HTTP_ERROR,
-                    null
+                return(
+                    $response = [
+                        "responseCode" => Utilities::COD_RESPONSE_ERROR_CREATE,
+                        "responseMessage" => "El email ingresado ya se encuentra registrado",
+                    ]
                 );
             }
 
@@ -114,8 +135,39 @@ class UserController extends BaseController
                     $validator->errors()
                 );
             }
-            Log::notice('Validacion request completada con exito');
+            Log::info('Validacion request completada con exito');
 
+            // Se valida la información del usuario
+            $user = null;
+            $user = User::where('email', '=', $request->user)->first();
+
+            if($user == null){
+                return(
+                    $response = [
+                        "responseCode" => Utilities::COD_RESPONSE_HTTP_UNAUTHORIZED,
+                        "responseMessage" => "El email ingresado no se encuentra registrado",
+                    ]
+                );
+            }
+            else{
+                if (Hash::check($request->input('password'), $user->password)) {
+                    return Utilities::sendMessage(
+                        Utilities::COD_RESPONSE_SUCCESS,
+                        'Inicio de sesión exitoso',
+                        false,
+                        Utilities::COD_RESPONSE_HTTP_CREATED,
+                        null
+                    );
+                }else{
+                    return(
+                        $response = [
+                            "responseCode" => Utilities::COD_RESPONSE_HTTP_UNAUTHORIZED,
+                            "responseMessage" => "Contraseña incorrecta",
+                        ]
+                    );
+                }
+            }
+            
         }
         catch (QueryException $QueryException) {
             Log::error('Ocurrió un error en la base de datos: ' . $QueryException);
