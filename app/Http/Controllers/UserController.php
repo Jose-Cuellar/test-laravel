@@ -92,23 +92,12 @@ class UserController extends BaseController
                 null
             );
         }
-        catch (QueryException $QueryException) {
-            Log::error('Ocurrió un error en la base de datos: ' . $QueryException);
-            Log::info('***** registerUser *****');
-            return Utilities::sendMessage(
-                Utilities::COD_RESPONSE_ERROR_CREATE_SQL,
-                'No se actualizo la orden',
-                true,
-                Utilities::COD_RESPONSE_HTTP_ERROR,
-                null
-            );
-        }
         catch (Exception $Exception) {
-            Log::error('Error no controlado al actualizar la orden: ' . $Exception);
+            Log::error('Error no controlado al registrar el usuario: ' . $Exception);
             Log::info('***** registerUser *****');
             return Utilities::sendMessage(
                 Utilities::COD_RESPONSE_ERROR_CREATE,
-                'No se actualizo la orden',
+                'Ocurrió un error realizando el registro',
                 true,
                 Utilities::COD_RESPONSE_HTTP_ERROR,
                 null
@@ -167,25 +156,131 @@ class UserController extends BaseController
                     );
                 }
             }
-            
+        }
+        catch (Exception $Exception) {
+            Log::error('Error no controlado al iniciar sesión: ' . $Exception);
+            Log::info('***** loginUser *****');
+            return Utilities::sendMessage(
+                Utilities::COD_RESPONSE_ERROR_CREATE,
+                'Ocurrió un error al iniciar sesión',
+                true,
+                Utilities::COD_RESPONSE_HTTP_ERROR,
+                null
+            );
+        }
+    }
+
+    // Metodo para obtener el usuario logueado
+    public function getDataUser(Request $request){
+        try{
+            Log::info('========  Iniciando servicio getDataUser  ========');
+
+            $userData = User::where('id', '=', $request->id)->first();
+            Log::info('userData ' . $userData);
+
+            return Utilities::sendMessage(
+                Utilities::COD_RESPONSE_SUCCESS,
+                'Información del usuario',
+                false,
+                Utilities::COD_RESPONSE_HTTP_CREATED,
+                $userData
+            );
         }
         catch (QueryException $QueryException) {
             Log::error('Ocurrió un error en la base de datos: ' . $QueryException);
-            Log::info('***** loginUser *****');
+            Log::info('***** getDataUser *****');
             return Utilities::sendMessage(
                 Utilities::COD_RESPONSE_ERROR_CREATE_SQL,
-                'No se actualizo la orden',
+                'Ocurrió un error obteniendo el usuario',
                 true,
                 Utilities::COD_RESPONSE_HTTP_ERROR,
                 null
             );
         }
         catch (Exception $Exception) {
-            Log::error('Error no controlado al actualizar la orden: ' . $Exception);
-            Log::info('***** loginUser *****');
+            Log::error('Error no controlado al obtener el usuario: ' . $Exception);
+            Log::info('***** getDataUser *****');
             return Utilities::sendMessage(
                 Utilities::COD_RESPONSE_ERROR_CREATE,
-                'No se actualizo la orden',
+                'Ocurrió un error obteniendo el usuario',
+                true,
+                Utilities::COD_RESPONSE_HTTP_ERROR,
+                null
+            );
+        }
+    }
+
+    // Metodo para actualización de datos de usuario
+    public function updateUser(Request $request){
+        try{
+            Log::info('========  Iniciando servicio updateUser  ========');
+            $validator = Validator::make($request->all(), [
+                'user_id' => 'required|numeric',
+                'name' => 'required|string',
+                'last_name' => 'required|string',
+                'email' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                Log::error('Los datos ingresados son inválidos: ' . $validator->errors());
+                return Utilities::sendMessage(
+                    Utilities::COD_RESPONSE_ERROR_CREATE,
+                    'Los datos ingresados son inválidos',
+                    true,
+                    Utilities::COD_RESPONSE_HTTP_BAD_REQUEST,
+                    $validator->errors()
+                );
+            }
+            Log::info('Validacion request completada con exito');
+
+            // Se valida si el usuario no existe
+            $user = null;
+            $user = User::where('id', '=', $request->user_id)->first();
+            Log::info('user ' . $user);
+
+            // Se realiza el registro del usuario si aun no esta registrado
+            if($user == null){
+                return Utilities::sendMessage(
+                    Utilities::COD_RESPONSE_ERROR_UPDATE,
+                    'Ocurrió un error actualizando la información',
+                    false,
+                    Utilities::COD_RESPONSE_ERROR_UPDATE,
+                    null
+                );
+            }else{
+                Log::info('Se va a actualizar la información del usuario');
+                $updateUser = new User;
+                $updateUser->name = $request->name;
+                $updateUser->last_name = $request->last_name;
+                $updateUser->email = $request->email;
+                $updateUser->update();
+            }
+
+            return Utilities::sendMessage(
+                Utilities::COD_RESPONSE_SUCCESS,
+                'Datos actualizados con éxito',
+                false,
+                Utilities::COD_RESPONSE_HTTP_CREATED,
+                null
+            );
+        }
+        catch (QueryException $QueryException) {
+            Log::error('Ocurrió un error en la base de datos: ' . $QueryException);
+            Log::info('***** updateUser *****');
+            return Utilities::sendMessage(
+                Utilities::COD_RESPONSE_ERROR_CREATE_SQL,
+                'No se actualizo la información',
+                true,
+                Utilities::COD_RESPONSE_HTTP_ERROR,
+                null
+            );
+        }
+        catch (Exception $Exception) {
+            Log::error('Error no controlado al actualizar la información del usuario: ' . $Exception);
+            Log::info('***** updateUser *****');
+            return Utilities::sendMessage(
+                Utilities::COD_RESPONSE_ERROR_CREATE,
+                'No se actualizo la información',
                 true,
                 Utilities::COD_RESPONSE_HTTP_ERROR,
                 null
