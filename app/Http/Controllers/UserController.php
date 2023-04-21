@@ -145,7 +145,7 @@ class UserController extends BaseController
                         'Inicio de sesión exitoso',
                         false,
                         Utilities::COD_RESPONSE_HTTP_CREATED,
-                        null
+                        $user
                     );
                 }else{
                     return(
@@ -238,7 +238,7 @@ class UserController extends BaseController
             $user = User::where('id', '=', $request->user_id)->first();
             Log::info('user ' . $user);
 
-            // Se realiza el registro del usuario si aun no esta registrado
+            // Se realiza la actualización de los datos
             if($user == null){
                 return Utilities::sendMessage(
                     Utilities::COD_RESPONSE_ERROR_UPDATE,
@@ -249,11 +249,10 @@ class UserController extends BaseController
                 );
             }else{
                 Log::info('Se va a actualizar la información del usuario');
-                $updateUser = new User;
-                $updateUser->name = $request->name;
-                $updateUser->last_name = $request->last_name;
-                $updateUser->email = $request->email;
-                $updateUser->update();
+                $user->name = $request->name;
+                $user->last_name = $request->last_name;
+                $user->email = $request->email;
+                $user->update();
             }
 
             return Utilities::sendMessage(
@@ -269,7 +268,7 @@ class UserController extends BaseController
             Log::info('***** updateUser *****');
             return Utilities::sendMessage(
                 Utilities::COD_RESPONSE_ERROR_CREATE_SQL,
-                'No se actualizo la información',
+                'No se actualizo la información del usuario',
                 true,
                 Utilities::COD_RESPONSE_HTTP_ERROR,
                 null
@@ -280,7 +279,7 @@ class UserController extends BaseController
             Log::info('***** updateUser *****');
             return Utilities::sendMessage(
                 Utilities::COD_RESPONSE_ERROR_CREATE,
-                'No se actualizo la información',
+                'No se actualizo la información del usuario',
                 true,
                 Utilities::COD_RESPONSE_HTTP_ERROR,
                 null
